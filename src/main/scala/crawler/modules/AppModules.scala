@@ -22,12 +22,12 @@ class JpaModule extends Module {
 
 
 class CrawlerServiceModule extends Module {
-  bind [CrawlerService] to new CrawlerService(inject [EntityManagerFactory])
+  bind [CrawlerService] to new CrawlerService(inject [EntityManagerFactory], inject [ActorSystem] )
 
 }
 
 trait TestModule extends Module {
-  implicit val modules = new JpaModule :: new CrawlerServiceModule
+  implicit val modules = new JpaModule :: new CrawlerServiceModule :: new AkkaModules
 
   val service = inject [CrawlerService]
   implicit val emf = inject [EntityManagerFactory]

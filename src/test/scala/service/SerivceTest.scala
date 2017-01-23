@@ -3,7 +3,7 @@ package service
 import java.time.LocalDateTime
 import javax.persistence.{EntityManager, EntityManagerFactory}
 
-import crawler.models.Host
+import crawler.models.{Host, Url}
 import crawler.modules.{AkkaModules, CrawlerServiceModule, JpaModule, TestModule}
 import crawler.service.CrawlerService
 import crawler.util.{jpaDML, jpaSelect}
@@ -23,13 +23,26 @@ class SerivceTest extends Specification with TestModule { def is: SpecStructure 
     host name is test                       $e21
 
   The CrawlerService.getContext method should
-    input invalid url then None                     $e31
-    input valid url then return Context             $e32
+    input invalid url then None                                  $e31
+    input valid url then return Context                          $e32
+    host.next updated by host.interval after create context      $e33
+
+
+  The CrawlerService.getHtml method should
+    getHtml $e41
 
   """
 
+  import scala.collection.JavaConverters._
+
+  val hostName = "m.daum.net"
+  private val url = "http://test.com"
+
   jpaDML { em =>
-    em.persist(new Host("test", "http://test.com", true, LocalDateTime.now()))
+    val _h = new Host(hostName, true)
+    val _u = new Url(url)
+    _h.urls.add(_u)
+    em.persist(_h)
   }
 
   val list =jpaSelect[Host]{ em =>
@@ -46,19 +59,17 @@ class SerivceTest extends Specification with TestModule { def is: SpecStructure 
   val e13 = list3 must have size 0
 
   val host = service.getHostToCrawling()
-  val e21 = host.get.name === "test"
+  val e21 = host.get.name === "m.daum.net"
 
-  private val url = "http://test.com"
-  val c1 = service.getContext("hello")
-  val c2 = service.getContext(url)
+  val c1 = service.getContext("invalid host name")
+  val c2 = service.getContext(hostName)
   val c2Host = service.getHosts().head
 
   val e31 = c1 === None
   val e32 = c2.get.url === url
-//  val e33 = c2Host.nextDate >= host.get.nextDate
-  print("c2Host.nextDate")
-  print(c2Host.nextDate)
-  print(host.get.nextDate)
+  val e33 = (c2Host.nextDate.compareTo(host.get.nextDate) > 0) === true
+
+  val e41 = service.getHtml(url) === ""
 
 
 }

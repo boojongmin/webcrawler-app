@@ -26,7 +26,7 @@ object CrawlerApp extends App {
   val entityManager = entityManagerFactory.createEntityManager()
 
   entityManager.getTransaction.begin()
-  private val entity = new Host("hello", "http:hello", true)
+  private val entity = new Host("hello", true)
   entityManager.persist(entity)
 
   entityManager.getTransaction.commit()
